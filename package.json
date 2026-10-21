@@ -8,7 +8,7 @@
     "setup": "node scripts/setup.js",
     "build": "./engine/build.sh",
     "start": "node server/index.js",
-    "test": "node test/determinism.js && node test/smoke.js",
+    "test": "node test/determinism.js && node test/smoke.js && node test/bandwidth-count.js",
     "check": "node test/stream-check.js",
     "test:spectators": "node test/spectator-check.js",
     "deploy": "npm --prefix infra run deploy",
