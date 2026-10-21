@@ -197,12 +197,21 @@ async function stream() {
   }
   lastServed = served;
   prev.fill(0);
-  const reader = res.body.pipeThrough(new DecompressionStream('deflate')).getReader();
+  // Count bytes as they arrive from the network, before the decompressor, so
+  // the status bar shows on-wire bandwidth (what deflate actually sends), not
+  // the fixed ~64 KB per decoded frame. The tap sits in front of
+  // DecompressionStream and passes each chunk through untouched.
+  const counted = res.body.pipeThrough(new TransformStream({
+    transform(chunk, controller) {
+      bytesIn += chunk.byteLength;
+      controller.enqueue(chunk);
+    },
+  }));
+  const reader = counted.pipeThrough(new DecompressionStream('deflate')).getReader();
   let buf = new Uint8Array(0);
   for (;;) {
     const { value, done } = await reader.read();
     if (done) return;
-    bytesIn += value.length;
     buf = concat(buf, value);
     let off = 0;
     for (;;) {
